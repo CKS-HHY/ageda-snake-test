@@ -1,0 +1,14 @@
+{"type": "test2_start", "repo": "https://github.com/CKS-HHY/ageda-snake-test.git", "ts": "2026-03-01T21:40:52.748814+00:00Z"}
+{"type": "node_start", "node_id": "init", "ts": "2026-03-01T21:40:52.748895+00:00Z"}
+{"type": "node_complete", "node_id": "init", "ts": "2026-03-01T21:40:52.749176+00:00Z"}
+{"type": "node_start", "node_id": "scan", "ts": "2026-03-01T21:40:52.749207+00:00Z"}
+{"type": "node_complete", "node_id": "scan", "ts": "2026-03-01T21:40:52.749679+00:00Z"}
+{"type": "node_start", "node_id": "explore", "ts": "2026-03-01T21:40:52.749697+00:00Z"}
+{"type": "node_complete", "node_id": "explore", "ts": "2026-03-01T21:40:52.749841+00:00Z"}
+{"type": "node_start", "node_id": "plan", "ts": "2026-03-01T21:40:52.749853+00:00Z"}
+{"type": "node_complete", "node_id": "plan", "ts": "2026-03-01T21:40:52.749985+00:00Z"}
+{"type": "node_start", "node_id": "code", "ts": "2026-03-01T21:40:52.749997+00:00Z"}
+{"type": "node_complete", "node_id": "code", "ts": "2026-03-01T21:40:52.750196+00:00Z"}
+{"type": "node_start", "node_id": "review", "ts": "2026-03-01T21:40:52.750208+00:00Z"}
+{"type": "node_complete", "node_id": "review", "ts": "2026-03-01T21:40:52.750320+00:00Z"}
+{"type": "node_start", "node_id": "commit", "ts": "2026-03-01T21:40:52.750330+00:00Z"}
