@@ -1,0 +1,15 @@
+{
+  "session_id": "2026-03-01T21-57-40_task-test3-neon-drift-20260301-215740",
+  "task_id": "test3-neon-drift-20260301-215740",
+  "task_title": "",
+  "org_id": "org_handhy",
+  "daemon_id": "test3-real",
+  "model": "openai/gpt-5.3-codex",
+  "started_at": "2026-03-01T21:57:40.545687+00:00",
+  "completed_at": null,
+  "status": "running",
+  "target_repos": [],
+  "nodes_executed": [],
+  "total_llm_calls": 0,
+  "total_tool_calls": 0
+}
