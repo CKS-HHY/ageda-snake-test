@@ -1,5 +1,5 @@
-<!-- task_id: ajehv8etf5l25jfofuib -->
-<!doctype html>
+<!-- task_id: uzvt0xim6muldw2ln777 -->
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -7,7 +7,11 @@
   <title>3D Knowledge Sphere</title>
   <style>
     :root {
-      color-scheme: dark;
+      --bg: #0a0a1a;
+      --text: #f4f8ff;
+      --tooltip-bg: rgba(255, 255, 255, 0.12);
+      --tooltip-border: rgba(255, 255, 255, 0.25);
+      --tooltip-shadow: rgba(0, 0, 0, 0.35);
     }
 
     * {
@@ -20,39 +24,45 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: #0a0a1a;
+      background: var(--bg);
+      color: var(--text);
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
     }
 
     #app {
       position: fixed;
       inset: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 30% 20%, #131337 0%, #0a0a1a 55%, #080816 100%);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      outline: none;
     }
 
     #tooltip {
       position: fixed;
-      left: 0;
-      top: 0;
-      transform: translate(-50%, calc(-100% - 14px));
       pointer-events: none;
-      color: #e8ecff;
-      background: rgba(148, 163, 255, 0.15);
-      border: 1px solid rgba(255, 255, 255, 0.28);
-      border-radius: 14px;
-      padding: 10px 14px;
-      font-size: 0.9rem;
-      letter-spacing: 0.02em;
-      backdrop-filter: blur(14px) saturate(140%);
-      -webkit-backdrop-filter: blur(14px) saturate(140%);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
       opacity: 0;
-      transition: opacity 180ms ease;
+      transform: translate(-50%, -120%);
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: var(--tooltip-bg);
+      border: 1px solid var(--tooltip-border);
+      box-shadow: 0 12px 40px var(--tooltip-shadow);
+      backdrop-filter: blur(12px) saturate(130%);
+      -webkit-backdrop-filter: blur(12px) saturate(130%);
+      color: #ffffff;
+      font-size: 0.92rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      transition: opacity 0.2s ease;
       white-space: nowrap;
       z-index: 20;
-    }
-
-    #tooltip.visible {
-      opacity: 1;
     }
 
     #tooltip::after {
@@ -60,14 +70,14 @@
       position: absolute;
       left: 50%;
       bottom: -8px;
+      transform: translateX(-50%) rotate(45deg);
       width: 12px;
       height: 12px;
-      transform: translateX(-50%) rotate(45deg);
-      background: rgba(148, 163, 255, 0.15);
-      border-right: 1px solid rgba(255, 255, 255, 0.28);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.28);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      background: var(--tooltip-bg);
+      border-right: 1px solid var(--tooltip-border);
+      border-bottom: 1px solid var(--tooltip-border);
+      backdrop-filter: blur(12px) saturate(130%);
+      -webkit-backdrop-filter: blur(12px) saturate(130%);
     }
   </style>
 </head>
@@ -76,19 +86,19 @@
   <div id="tooltip" aria-live="polite"></div>
 
   <script type="module">
-    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js';
-    import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/controls/OrbitControls.js';
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
+    import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/controls/OrbitControls.js';
 
     const app = document.getElementById('app');
     const tooltip = document.getElementById('tooltip');
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0a1a);
+    scene.background = new THREE.Color('#0a0a1a');
 
-    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 1.2, 8);
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 0.6, 7.5);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -96,64 +106,52 @@
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.045;
-    controls.enablePan = false;
-    controls.minDistance = 4;
+    controls.dampingFactor = 0.05;
+    controls.minDistance = 3.5;
     controls.maxDistance = 15;
 
-    const ambientLight = new THREE.AmbientLight(0x7f8cff, 0.45);
+    const ambientLight = new THREE.AmbientLight(0xb7c8ff, 0.45);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xb9c8ff, 0.9);
-    directionalLight.position.set(4, 5, 6);
-    scene.add(directionalLight);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    keyLight.position.set(5, 4, 6);
+    scene.add(keyLight);
 
-    const pointLight = new THREE.PointLight(0x5a6bff, 1.2, 30, 2);
-    pointLight.position.set(-5, -2, 4);
-    scene.add(pointLight);
+    const fillLight = new THREE.PointLight(0x6ba4ff, 1.1, 40, 2);
+    fillLight.position.set(-4, -2, -6);
+    scene.add(fillLight);
 
-    const sphereGroup = new THREE.Group();
-    scene.add(sphereGroup);
+    const sphereRadius = 2.1;
+    const sphere = new THREE.Mesh(
+      new THREE.SphereGeometry(sphereRadius, 64, 64),
+      new THREE.MeshPhysicalMaterial({
+        color: 0x2f7cff,
+        roughness: 0.25,
+        metalness: 0.35,
+        clearcoat: 0.75,
+        clearcoatRoughness: 0.2,
+        transmission: 0.15,
+        opacity: 0.95,
+        transparent: true,
+        emissive: 0x0f1c66,
+        emissiveIntensity: 0.45
+      })
+    );
+    scene.add(sphere);
 
-    const sphereRadius = 2.15;
-    const sphereGeometry = new THREE.SphereGeometry(sphereRadius, 96, 96);
-    const sphereMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0x223078,
-      metalness: 0.25,
-      roughness: 0.2,
-      transmission: 0.08,
-      thickness: 0.8,
-      emissive: 0x0f1a4d,
-      emissiveIntensity: 0.7,
-      clearcoat: 0.8,
-      clearcoatRoughness: 0.12,
-    });
-    const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
-    sphereGroup.add(sphereMesh);
+    const starCount = 1800;
+    const starPositions = new Float32Array(starCount * 3);
+    const starSizes = new Float32Array(starCount);
 
-    const glowGeometry = new THREE.SphereGeometry(sphereRadius * 1.02, 96, 96);
-    const glowMaterial = new THREE.MeshBasicMaterial({
-      color: 0x4b63ff,
-      transparent: true,
-      opacity: 0.14,
-      side: THREE.BackSide,
-    });
-    const glowSphere = new THREE.Mesh(glowGeometry, glowMaterial);
-    sphereGroup.add(glowSphere);
-
-    const starsCount = 1800;
-    const starPositions = new Float32Array(starsCount * 3);
-    const starSizes = new Float32Array(starsCount);
-
-    for (let i = 0; i < starsCount; i += 1) {
+    for (let i = 0; i < starCount; i++) {
       const i3 = i * 3;
-      const radius = 18 + Math.random() * 45;
+      const r = 35 + Math.random() * 80;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
 
-      starPositions[i3] = radius * Math.sin(phi) * Math.cos(theta);
-      starPositions[i3 + 1] = radius * Math.cos(phi);
-      starPositions[i3 + 2] = radius * Math.sin(phi) * Math.sin(theta);
+      starPositions[i3] = r * Math.sin(phi) * Math.cos(theta);
+      starPositions[i3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      starPositions[i3 + 2] = r * Math.cos(phi);
       starSizes[i] = 0.8 + Math.random() * 1.6;
     }
 
@@ -162,174 +160,168 @@
     starsGeometry.setAttribute('size', new THREE.BufferAttribute(starSizes, 1));
 
     const starsMaterial = new THREE.PointsMaterial({
-      color: 0xc8d5ff,
-      size: 0.07,
+      color: 0xbfd3ff,
+      size: 0.09,
       transparent: true,
-      opacity: 0.88,
-      blending: THREE.AdditiveBlending,
+      opacity: 0.9,
       depthWrite: false,
-      sizeAttenuation: true,
+      blending: THREE.AdditiveBlending,
+      sizeAttenuation: true
     });
 
     const stars = new THREE.Points(starsGeometry, starsMaterial);
     scene.add(stars);
 
-    const nodeLabels = [
-      'Artificial Intelligence',
-      'Data Science',
+    const domainNames = [
+      'Machine Learning',
+      'Knowledge Graphs',
+      'Distributed Systems',
       'Cybersecurity',
-      'Cloud Computing',
-      'Quantum Computing',
-      'Blockchain Systems',
-      'Human-Computer Interaction',
+      'Natural Language',
+      'Computer Vision',
+      'Data Engineering',
+      'Cloud Infrastructure',
       'Robotics',
-      'Bioinformatics',
-      'Internet of Things',
-      'Augmented Reality',
-      'Software Architecture',
+      'Quantum Computing',
+      'Human-Computer Interaction',
+      'Bioinformatics'
     ];
 
-    const nodeMeshes = [];
     const nodeGroup = new THREE.Group();
-    sphereGroup.add(nodeGroup);
+    sphere.add(nodeGroup);
 
-    const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-    const nodeDistance = sphereRadius * 1.015;
+    const nodeGeometry = new THREE.SphereGeometry(0.08, 20, 20);
+    const nodeMaterial = new THREE.MeshStandardMaterial({
+      color: 0x88c5ff,
+      emissive: 0x4ea4ff,
+      emissiveIntensity: 1.8,
+      roughness: 0.2,
+      metalness: 0.15
+    });
 
-    for (let i = 0; i < 12; i += 1) {
-      const y = 1 - (i / 11) * 2;
-      const radiusAtY = Math.sqrt(1 - y * y);
-      const theta = goldenAngle * i;
-      const x = Math.cos(theta) * radiusAtY;
-      const z = Math.sin(theta) * radiusAtY;
+    const nodeHaloGeometry = new THREE.SphereGeometry(0.14, 18, 18);
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
 
-      const pos = new THREE.Vector3(x, y, z).multiplyScalar(nodeDistance);
+    const nodes = [];
+    const selected = { mesh: null };
 
-      const nodeGeometry = new THREE.SphereGeometry(0.08, 24, 24);
-      const nodeMaterial = new THREE.MeshStandardMaterial({
-        color: 0x9dd6ff,
-        emissive: 0x4d9dff,
-        emissiveIntensity: 1.2,
-        metalness: 0.1,
-        roughness: 0.25,
-      });
-      const node = new THREE.Mesh(nodeGeometry, nodeMaterial);
-      node.position.copy(pos);
-      node.userData.label = nodeLabels[i];
-      node.userData.baseScale = 1;
+    function fibonacciSpherePoint(index, total) {
+      const offset = 2 / total;
+      const increment = Math.PI * (3 - Math.sqrt(5));
+      const y = ((index * offset) - 1) + (offset / 2);
+      const r = Math.sqrt(1 - y * y);
+      const phi = index * increment;
+      const x = Math.cos(phi) * r;
+      const z = Math.sin(phi) * r;
+      return new THREE.Vector3(x, y, z);
+    }
 
-      const haloGeometry = new THREE.SphereGeometry(0.13, 20, 20);
-      const haloMaterial = new THREE.MeshBasicMaterial({
-        color: 0x66d1ff,
-        transparent: true,
-        opacity: 0.35,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-      });
-      const halo = new THREE.Mesh(haloGeometry, haloMaterial);
-      halo.userData.isHalo = true;
+    domainNames.forEach((name, i) => {
+      const position = fibonacciSpherePoint(i, domainNames.length).multiplyScalar(sphereRadius + 0.02);
+
+      const node = new THREE.Mesh(nodeGeometry, nodeMaterial.clone());
+      node.position.copy(position);
+      node.userData = { domain: name, baseScale: 1 };
+
+      const halo = new THREE.Mesh(
+        nodeHaloGeometry,
+        new THREE.MeshBasicMaterial({
+          color: 0x6fb6ff,
+          transparent: true,
+          opacity: 0.2,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
+        })
+      );
       node.add(halo);
 
       nodeGroup.add(node);
-      nodeMeshes.push(node);
-    }
-
-    const raycaster = new THREE.Raycaster();
-    const pointer = new THREE.Vector2();
-    let activeNode = null;
-
-    function showTooltip(node) {
-      if (!node) return;
-      tooltip.textContent = node.userData.label;
-      tooltip.classList.add('visible');
-    }
+      nodes.push(node);
+    });
 
     function hideTooltip() {
-      tooltip.classList.remove('visible');
-      activeNode = null;
+      tooltip.style.opacity = '0';
+      selected.mesh = null;
     }
 
-    function setPointerFromEvent(event) {
-      const rect = renderer.domElement.getBoundingClientRect();
-      pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    function showTooltip(node) {
+      selected.mesh = node;
+      tooltip.textContent = node.userData.domain;
+      tooltip.style.opacity = '1';
+      updateTooltipPosition();
     }
 
-    function onCanvasClick(event) {
-      setPointerFromEvent(event);
+    const screenPos = new THREE.Vector3();
+    function updateTooltipPosition() {
+      if (!selected.mesh) return;
+      selected.mesh.getWorldPosition(screenPos);
+      screenPos.project(camera);
+
+      const x = (screenPos.x * 0.5 + 0.5) * window.innerWidth;
+      const y = (-screenPos.y * 0.5 + 0.5) * window.innerHeight;
+
+      tooltip.style.left = `${x}px`;
+      tooltip.style.top = `${y - 16}px`;
+
+      const isBehind = screenPos.z > 1;
+      tooltip.style.opacity = isBehind ? '0' : '1';
+    }
+
+    function onPointerClick(event) {
+      pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+      pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
       raycaster.setFromCamera(pointer, camera);
-      const intersects = raycaster.intersectObjects(nodeMeshes, false);
+      const intersects = raycaster.intersectObjects(nodes, false);
 
       if (intersects.length > 0) {
-        activeNode = intersects[0].object;
-        showTooltip(activeNode);
+        showTooltip(intersects[0].object);
       } else {
         hideTooltip();
       }
     }
 
-    renderer.domElement.addEventListener('click', onCanvasClick);
+    renderer.domElement.addEventListener('pointerdown', onPointerClick);
 
-    function updateTooltipPosition() {
-      if (!activeNode || !tooltip.classList.contains('visible')) return;
+    const clock = new THREE.Clock();
 
-      const worldPosition = new THREE.Vector3();
-      activeNode.getWorldPosition(worldPosition);
-      worldPosition.project(camera);
+    function animate() {
+      const t = clock.getElapsedTime();
 
-      const x = (worldPosition.x * 0.5 + 0.5) * window.innerWidth;
-      const y = (-worldPosition.y * 0.5 + 0.5) * window.innerHeight;
+      sphere.rotation.y += 0.0025;
+      sphere.rotation.x = Math.sin(t * 0.25) * 0.08;
 
-      const isBehindCamera = worldPosition.z > 1;
-      if (isBehindCamera) {
-        tooltip.classList.remove('visible');
-        return;
+      stars.rotation.y += 0.00025;
+      stars.rotation.x = Math.sin(t * 0.07) * 0.02;
+
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        const pulse = 1 + Math.sin(t * 2.4 + i * 0.7) * 0.12;
+        node.scale.setScalar(selected.mesh === node ? 1.45 : pulse);
       }
 
-      tooltip.style.left = `${x}px`;
-      tooltip.style.top = `${y}px`;
-      tooltip.classList.add('visible');
-    }
-
-    function animateStars(time) {
-      const positions = starsGeometry.attributes.position.array;
-      for (let i = 0; i < starsCount; i += 1) {
-        const i3 = i * 3;
-        positions[i3 + 1] += Math.sin(time * 0.00018 + i * 0.13) * 0.0008;
-      }
-      starsGeometry.attributes.position.needsUpdate = true;
-      stars.rotation.y += 0.00018;
-      stars.rotation.x += 0.00005;
-    }
-
-    function animate(time = 0) {
-      requestAnimationFrame(animate);
-
-      sphereGroup.rotation.y += 0.0025;
-      sphereGroup.rotation.x = Math.sin(time * 0.00025) * 0.07;
-
-      const pulse = 1 + Math.sin(time * 0.003) * 0.15;
-      for (const node of nodeMeshes) {
-        const scale = node === activeNode ? 1.35 : pulse;
-        node.scale.setScalar(scale);
-      }
-
-      animateStars(time);
       controls.update();
       updateTooltipPosition();
       renderer.render(scene, camera);
     }
 
-    function onResize() {
+    renderer.setAnimationLoop(animate);
+
+    window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
       updateTooltipPosition();
-    }
+    });
 
-    window.addEventListener('resize', onResize);
+    renderer.domElement.addEventListener('pointerleave', () => {
+      if (!selected.mesh) tooltip.style.opacity = '0';
+    });
 
-    animate();
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') hideTooltip();
+    });
   </script>
 </body>
 </html>
