@@ -1,0 +1,335 @@
+<!-- task_id: ajehv8etf5l25jfofuib -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D Knowledge Sphere</title>
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0a0a1a;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    #app {
+      position: fixed;
+      inset: 0;
+    }
+
+    #tooltip {
+      position: fixed;
+      left: 0;
+      top: 0;
+      transform: translate(-50%, calc(-100% - 14px));
+      pointer-events: none;
+      color: #e8ecff;
+      background: rgba(148, 163, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      letter-spacing: 0.02em;
+      backdrop-filter: blur(14px) saturate(140%);
+      -webkit-backdrop-filter: blur(14px) saturate(140%);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      opacity: 0;
+      transition: opacity 180ms ease;
+      white-space: nowrap;
+      z-index: 20;
+    }
+
+    #tooltip.visible {
+      opacity: 1;
+    }
+
+    #tooltip::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -8px;
+      width: 12px;
+      height: 12px;
+      transform: translateX(-50%) rotate(45deg);
+      background: rgba(148, 163, 255, 0.15);
+      border-right: 1px solid rgba(255, 255, 255, 0.28);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="tooltip" aria-live="polite"></div>
+
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js';
+    import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/controls/OrbitControls.js';
+
+    const app = document.getElementById('app');
+    const tooltip = document.getElementById('tooltip');
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0a1a);
+
+    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 1.2, 8);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    app.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.045;
+    controls.enablePan = false;
+    controls.minDistance = 4;
+    controls.maxDistance = 15;
+
+    const ambientLight = new THREE.AmbientLight(0x7f8cff, 0.45);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xb9c8ff, 0.9);
+    directionalLight.position.set(4, 5, 6);
+    scene.add(directionalLight);
+
+    const pointLight = new THREE.PointLight(0x5a6bff, 1.2, 30, 2);
+    pointLight.position.set(-5, -2, 4);
+    scene.add(pointLight);
+
+    const sphereGroup = new THREE.Group();
+    scene.add(sphereGroup);
+
+    const sphereRadius = 2.15;
+    const sphereGeometry = new THREE.SphereGeometry(sphereRadius, 96, 96);
+    const sphereMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x223078,
+      metalness: 0.25,
+      roughness: 0.2,
+      transmission: 0.08,
+      thickness: 0.8,
+      emissive: 0x0f1a4d,
+      emissiveIntensity: 0.7,
+      clearcoat: 0.8,
+      clearcoatRoughness: 0.12,
+    });
+    const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
+    sphereGroup.add(sphereMesh);
+
+    const glowGeometry = new THREE.SphereGeometry(sphereRadius * 1.02, 96, 96);
+    const glowMaterial = new THREE.MeshBasicMaterial({
+      color: 0x4b63ff,
+      transparent: true,
+      opacity: 0.14,
+      side: THREE.BackSide,
+    });
+    const glowSphere = new THREE.Mesh(glowGeometry, glowMaterial);
+    sphereGroup.add(glowSphere);
+
+    const starsCount = 1800;
+    const starPositions = new Float32Array(starsCount * 3);
+    const starSizes = new Float32Array(starsCount);
+
+    for (let i = 0; i < starsCount; i += 1) {
+      const i3 = i * 3;
+      const radius = 18 + Math.random() * 45;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+
+      starPositions[i3] = radius * Math.sin(phi) * Math.cos(theta);
+      starPositions[i3 + 1] = radius * Math.cos(phi);
+      starPositions[i3 + 2] = radius * Math.sin(phi) * Math.sin(theta);
+      starSizes[i] = 0.8 + Math.random() * 1.6;
+    }
+
+    const starsGeometry = new THREE.BufferGeometry();
+    starsGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    starsGeometry.setAttribute('size', new THREE.BufferAttribute(starSizes, 1));
+
+    const starsMaterial = new THREE.PointsMaterial({
+      color: 0xc8d5ff,
+      size: 0.07,
+      transparent: true,
+      opacity: 0.88,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      sizeAttenuation: true,
+    });
+
+    const stars = new THREE.Points(starsGeometry, starsMaterial);
+    scene.add(stars);
+
+    const nodeLabels = [
+      'Artificial Intelligence',
+      'Data Science',
+      'Cybersecurity',
+      'Cloud Computing',
+      'Quantum Computing',
+      'Blockchain Systems',
+      'Human-Computer Interaction',
+      'Robotics',
+      'Bioinformatics',
+      'Internet of Things',
+      'Augmented Reality',
+      'Software Architecture',
+    ];
+
+    const nodeMeshes = [];
+    const nodeGroup = new THREE.Group();
+    sphereGroup.add(nodeGroup);
+
+    const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+    const nodeDistance = sphereRadius * 1.015;
+
+    for (let i = 0; i < 12; i += 1) {
+      const y = 1 - (i / 11) * 2;
+      const radiusAtY = Math.sqrt(1 - y * y);
+      const theta = goldenAngle * i;
+      const x = Math.cos(theta) * radiusAtY;
+      const z = Math.sin(theta) * radiusAtY;
+
+      const pos = new THREE.Vector3(x, y, z).multiplyScalar(nodeDistance);
+
+      const nodeGeometry = new THREE.SphereGeometry(0.08, 24, 24);
+      const nodeMaterial = new THREE.MeshStandardMaterial({
+        color: 0x9dd6ff,
+        emissive: 0x4d9dff,
+        emissiveIntensity: 1.2,
+        metalness: 0.1,
+        roughness: 0.25,
+      });
+      const node = new THREE.Mesh(nodeGeometry, nodeMaterial);
+      node.position.copy(pos);
+      node.userData.label = nodeLabels[i];
+      node.userData.baseScale = 1;
+
+      const haloGeometry = new THREE.SphereGeometry(0.13, 20, 20);
+      const haloMaterial = new THREE.MeshBasicMaterial({
+        color: 0x66d1ff,
+        transparent: true,
+        opacity: 0.35,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const halo = new THREE.Mesh(haloGeometry, haloMaterial);
+      halo.userData.isHalo = true;
+      node.add(halo);
+
+      nodeGroup.add(node);
+      nodeMeshes.push(node);
+    }
+
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    let activeNode = null;
+
+    function showTooltip(node) {
+      if (!node) return;
+      tooltip.textContent = node.userData.label;
+      tooltip.classList.add('visible');
+    }
+
+    function hideTooltip() {
+      tooltip.classList.remove('visible');
+      activeNode = null;
+    }
+
+    function setPointerFromEvent(event) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    }
+
+    function onCanvasClick(event) {
+      setPointerFromEvent(event);
+      raycaster.setFromCamera(pointer, camera);
+      const intersects = raycaster.intersectObjects(nodeMeshes, false);
+
+      if (intersects.length > 0) {
+        activeNode = intersects[0].object;
+        showTooltip(activeNode);
+      } else {
+        hideTooltip();
+      }
+    }
+
+    renderer.domElement.addEventListener('click', onCanvasClick);
+
+    function updateTooltipPosition() {
+      if (!activeNode || !tooltip.classList.contains('visible')) return;
+
+      const worldPosition = new THREE.Vector3();
+      activeNode.getWorldPosition(worldPosition);
+      worldPosition.project(camera);
+
+      const x = (worldPosition.x * 0.5 + 0.5) * window.innerWidth;
+      const y = (-worldPosition.y * 0.5 + 0.5) * window.innerHeight;
+
+      const isBehindCamera = worldPosition.z > 1;
+      if (isBehindCamera) {
+        tooltip.classList.remove('visible');
+        return;
+      }
+
+      tooltip.style.left = `${x}px`;
+      tooltip.style.top = `${y}px`;
+      tooltip.classList.add('visible');
+    }
+
+    function animateStars(time) {
+      const positions = starsGeometry.attributes.position.array;
+      for (let i = 0; i < starsCount; i += 1) {
+        const i3 = i * 3;
+        positions[i3 + 1] += Math.sin(time * 0.00018 + i * 0.13) * 0.0008;
+      }
+      starsGeometry.attributes.position.needsUpdate = true;
+      stars.rotation.y += 0.00018;
+      stars.rotation.x += 0.00005;
+    }
+
+    function animate(time = 0) {
+      requestAnimationFrame(animate);
+
+      sphereGroup.rotation.y += 0.0025;
+      sphereGroup.rotation.x = Math.sin(time * 0.00025) * 0.07;
+
+      const pulse = 1 + Math.sin(time * 0.003) * 0.15;
+      for (const node of nodeMeshes) {
+        const scale = node === activeNode ? 1.35 : pulse;
+        node.scale.setScalar(scale);
+      }
+
+      animateStars(time);
+      controls.update();
+      updateTooltipPosition();
+      renderer.render(scene, camera);
+    }
+
+    function onResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      updateTooltipPosition();
+    }
+
+    window.addEventListener('resize', onResize);
+
+    animate();
+  </script>
+</body>
+</html>
