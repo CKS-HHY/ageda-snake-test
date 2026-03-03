@@ -1,4 +1,14 @@
-import { CANVAS_WIDTH, CANVAS_HEIGHT, CENTER_X, CENTER_Y, ORBIT_RADII, GAME_STATE, SLOW_TIME_DURATION, NEAR_MISS_THRESHOLD, METEOR_SPAWN_INTERVAL } from './constants.js';
+import { 
+    CANVAS_WIDTH, 
+    CANVAS_HEIGHT, 
+    CENTER_X, 
+    CENTER_Y, 
+    ORBIT_RADII, 
+    GAME_STATE, 
+    SLOW_TIME_DURATION, 
+    NEAR_MISS_THRESHOLD, 
+    METEOR_SPAWN_INTERVAL 
+} from './constants.js';
 import { Player } from './entities/Player.js';
 import { Meteorite } from './entities/Meteorite.js';
 
@@ -33,9 +43,15 @@ class Game {
         };
 
         window.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') triggerSwitch();
+            if (e.code === 'Space') {
+                e.preventDefault();
+                triggerSwitch();
+            }
         });
-        this.canvas.addEventListener('mousedown', triggerSwitch);
+        this.canvas.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            triggerSwitch();
+        });
     }
 
     reset() {
@@ -47,6 +63,7 @@ class Game {
         this.startTime = Date.now();
         this.slowTimer = 0;
         this.isSlowed = false;
+        this.lastSpawnTime = 0;
     }
 
     update() {
@@ -57,64 +74,60 @@ class Game {
         
         // Difficulty increase: higher freq, more fakes, faster speeds
         this.difficulty = 1 + Math.floor(elapsed / 10); // +1 every 10s
-        const spawnInterval = Math.max(500, METEOR_SPAWN_INTERVAL - (this.difficulty * 100));
+        const spawnInterval = Math.max(400, METEOR_SPAWN_INTERVAL - (this.difficulty * 80));
         
         // Handle Slow Time
         if (this.isSlowed) {
-            this.slowTimer -= 16; // approx ms per frame
+            this.slowTimer -= 16; // approx ms per frame at 60fps
             if (this.slowTimer <= 0) {
                 this.isSlowed = false;
                 this.slowTimer = 0;
             }
-        } else {
-            // Power-up rare: chance to slow time on spawn
-            // (Simulated as random chance during update here)
         }
 
         // Spawn meteorites
         if (now - this.lastSpawnTime > spawnInterval) {
-            const isFake = Math.random() < Math.min(0.4, 0.1 * this.difficulty);
+            const isFake = Math.random() < Math.min(0.4, 0.05 * this.difficulty);
             this.meteorites.push(new Meteorite(1 + (this.difficulty * 0.1), isFake));
             this.lastSpawnTime = now;
-            
-            // Random chance for slow time power up? 
-            // In this specific simplicity, let's keep it direct.
-            // Maybe if a specific meteor is hit or passed? 
-            // Actually instructions say "Power-up raro: slow time per 2 secondi".
-            // Let's spawn a slow icon or just give it on many near-misses.
         }
 
         this.player.update(1, this.isSlowed);
         
-        this.meteorites.forEach((m, idx) => {
+        for (let i = this.meteorites.length - 1; i >= 0; i--) {
+            const m = this.meteorites[i];
             m.update(1, this.isSlowed);
             
-            // Collision Detection
+            // Distance squared for efficiency
             const dx = m.x - this.player.x;
             const dy = m.y - this.player.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
+            const distSq = dx * dx + dy * dy;
+            const collisionDist = (m.radius + this.player.size);
             
-            if (dist < m.radius + this.player.size) {
+            // Collision Detection
+            if (distSq < collisionDist * collisionDist) {
                 this.gameOver();
+                return;
             }
 
             // Near-miss detection
-            const minDist = m.radius + this.player.size + NEAR_MISS_THRESHOLD;
-            if (dist < minDist && !m.nearMissTriggered) {
+            const nearMissDist = collisionDist + NEAR_MISS_THRESHOLD;
+            if (distSq < nearMissDist * nearMissDist && !m.nearMissTriggered) {
                 this.score += 50 * this.difficulty;
                 m.nearMissTriggered = true;
-                // Occasionally grant slow time on near-miss
-                if (Math.random() < 0.05) {
+                
+                // Rarely grant slow time on near-miss
+                if (Math.random() < 0.08) {
                     this.isSlowed = true;
                     this.slowTimer = SLOW_TIME_DURATION;
                 }
             }
             
             if (m.isOffscreen()) {
-                this.meteorites.splice(idx, 1);
+                this.meteorites.splice(i, 1);
                 this.score += 10;
             }
-        });
+        }
 
         // UI Update
         document.getElementById('score').innerText = Math.floor(this.score);
@@ -126,12 +139,12 @@ class Game {
     }
 
     draw() {
-        this.ctx.fillStyle = '#000';
+        this.ctx.fillStyle = '#050505';
         this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
         // Draw Orbits
         ORBIT_RADII.forEach(r => {
-            this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            this.ctx.strokeStyle = 'rgba(0, 255, 255, 0.1)';
             this.ctx.lineWidth = 1;
             this.ctx.beginPath();
             this.ctx.arc(CENTER_X, CENTER_Y, r, 0, Math.PI * 2);
@@ -139,25 +152,34 @@ class Game {
         });
 
         // Central Planet
-        this.ctx.fillStyle = '#333';
+        const grad = this.ctx.createRadialGradient(CENTER_X, CENTER_Y, 0, CENTER_X, CENTER_Y, 40);
+        grad.addColorStop(0, '#1a1a1a');
+        grad.addColorStop(1, '#000');
+        this.ctx.fillStyle = grad;
         this.ctx.beginPath();
         this.ctx.arc(CENTER_X, CENTER_Y, 40, 0, Math.PI * 2);
         this.ctx.fill();
+        this.ctx.strokeStyle = '#333';
+        this.ctx.stroke();
 
         this.meteorites.forEach(m => m.draw(this.ctx));
         this.player.draw(this.ctx);
 
         if (this.isSlowed) {
-            this.ctx.strokeStyle = 'cyan';
-            this.ctx.lineWidth = 4;
+            this.ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
+            this.ctx.lineWidth = 10;
             this.ctx.strokeRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
             
-            this.ctx.fillStyle = 'rgba(0, 255, 255, 0.1)';
+            this.ctx.fillStyle = 'rgba(0, 255, 255, 0.05)';
             this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            
+            this.ctx.fillStyle = 'cyan';
+            this.ctx.font = 'bold 16px Segoe UI';
+            this.ctx.fillText('SLOW TIME', 20, 30);
         }
 
         if (this.state === GAME_STATE.GAME_OVER) {
-            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
             this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
             
             this.ctx.fillStyle = 'white';
@@ -167,6 +189,7 @@ class Game {
             
             this.ctx.font = '24px Segoe UI';
             this.ctx.fillText(`Final Score: ${Math.floor(this.score)}`, CENTER_X, CENTER_Y + 30);
+            this.ctx.fillStyle = '#00ffff';
             this.ctx.fillText('Click to Restart', CENTER_X, CENTER_Y + 80);
         }
     }

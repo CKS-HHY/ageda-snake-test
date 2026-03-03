@@ -1,4 +1,4 @@
-import { CENTER_X, CENTER_Y, ORBIT_RADII, PLAYER_BASE_SPEEDS, PLAYER_SIZE, SWITCH_COOLDOWN } from './constants.js';
+import { CENTER_X, CENTER_Y, ORBIT_RADII, PLAYER_BASE_SPEEDS, PLAYER_SIZE, SWITCH_COOLDOWN } from '../constants.js';
 
 export class Player {
     constructor() {
@@ -13,17 +13,22 @@ export class Player {
         this.isSwitching = false;
         
         // Update positions
+        this.updatePos();
+    }
+
+    updatePos() {
         this.x = CENTER_X + Math.cos(this.angle) * this.radius;
         this.y = CENTER_Y + Math.sin(this.angle) * this.radius;
     }
 
     switchOrbit() {
-        if (Date.now() - this.lastSwitchTime < SWITCH_COOLDOWN) return false;
+        const now = Date.now();
+        if (now - this.lastSwitchTime < SWITCH_COOLDOWN) return false;
         
         // Cycle orbits 0 -> 1 -> 2 -> 0...
         this.targetOrbitIndex = (this.orbitIndex + 1) % ORBIT_RADII.length;
         this.targetRadius = ORBIT_RADII[this.targetOrbitIndex];
-        this.lastSwitchTime = Date.now();
+        this.lastSwitchTime = now;
         this.isSwitching = true;
         
         return true;
@@ -45,12 +50,12 @@ export class Player {
         const currentSpeed = PLAYER_BASE_SPEEDS[this.orbitIndex] * speedScale;
         this.angle += currentSpeed;
 
-        this.x = CENTER_X + Math.cos(this.angle) * this.radius;
-        this.y = CENTER_Y + Math.sin(this.angle) * this.radius;
+        this.updatePos();
     }
 
     draw(ctx) {
         // Draw glow
+        ctx.save();
         ctx.shadowBlur = 10;
         ctx.shadowColor = this.color;
         
@@ -58,7 +63,6 @@ export class Player {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
-        
-        ctx.shadowBlur = 0;
+        ctx.restore();
     }
 }

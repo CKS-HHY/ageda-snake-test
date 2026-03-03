@@ -8,9 +8,10 @@ export class Meteorite {
         this.speed = (2 + Math.random() * 3) * speedMult;
         this.angle = Math.random() * Math.PI * 2;
         this.color = isFake ? '#ff00ff' : '#ff4d4d';
+        this.nearMissTriggered = false;
         
         // Spawn outside screen
-        const spawnDist = Math.max(CANVAS_WIDTH, CANVAS_HEIGHT);
+        const spawnDist = Math.max(CANVAS_WIDTH, CANVAS_HEIGHT) * 0.7;
         this.x = CENTER_X + Math.cos(this.angle) * spawnDist;
         this.y = CENTER_Y + Math.sin(this.angle) * spawnDist;
         
@@ -35,12 +36,12 @@ export class Meteorite {
         // Fake mechanic: sudden redirection towards the center halfway
         if (this.isFake && !this.isRedirected) {
             const distToCenter = Math.sqrt((this.x - CENTER_X) ** 2 + (this.y - CENTER_Y) ** 2);
-            if (distToCenter < 350) {
+            if (distToCenter < 150) {
                 const dx = CENTER_X - this.x;
                 const dy = CENTER_Y - this.y;
                 const len = Math.sqrt(dx * dx + dy * dy);
-                this.vx = (dx / len) * this.speed;
-                this.vy = (dy / len) * this.speed;
+                this.vx = (dx / len) * this.speed * 1.5; // Speed up when redirecting
+                this.vy = (dy / len) * this.speed * 1.5;
                 this.isRedirected = true;
                 this.color = '#ff9900'; // Flash color change
             }
@@ -57,12 +58,12 @@ export class Meteorite {
         ctx.strokeStyle = 'rgba(0,0,0,0.3)';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(this.x - 3, this.y - 3, this.radius * 0.6, 0, Math.PI * 2);
+        ctx.arc(this.x - 3, this.y - 3, this.radius * 0.4, 0, Math.PI * 2);
         ctx.stroke();
     }
 
     isOffscreen() {
-        const margin = 100;
+        const margin = 200;
         return (
             this.x < -margin || 
             this.x > CANVAS_WIDTH + margin || 
