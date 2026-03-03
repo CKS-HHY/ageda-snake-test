@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orbital Defense</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #0d0d0d;
+            font-family: 'Courier New', Courier, monospace;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        #gameCanvas {
+            border: 2px solid #555;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            background-color: #050510;
+        }
+
+        .controls-info {
+            position: absolute;
+            bottom: 20px;
+            color: #aaa;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="600" height="600"></canvas>
+    
+    <div class="controls-info">
+        CLICK / SPACE - SWITCH ORBIT | Z - SLOW TIME
+    </div>
+
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>
