@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orbital Defense</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #050505;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        canvas {
+            background-color: #000;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+            image-rendering: pixelated;
+        }
+        #ui {
+            position: absolute;
+            top: 20px;
+            pointer-events: none;
+            text-align: center;
+            width: 100%;
+        }
+        .score { font-size: 24px; font-weight: bold; }
+        .instructions { position: absolute; bottom: 20px; color: #666; font-size: 14px; }
+        #game-over {
+            position: absolute;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(0,0,0,0.8);
+            padding: 40px;
+            border: 1px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <div class="score">Score: <span id="score-val">0</span></div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="game-over">
+        <h1>GAME OVER</h1>
+        <p>Final Score: <span id="final-score">0</span></p>
+        <button onclick="location.reload()">RETRY</button>
+    </div>
+
+    <div class="instructions">Click or SPACE to switch orbit</div>
+
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>
