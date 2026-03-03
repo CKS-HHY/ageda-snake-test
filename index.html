@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pong Game</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        canvas { background: #000; border: 2px solid #fff; }
+    </style>
+</head>
+<body>
+    <canvas id="pongCanvas" width="800" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById('pongCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game parameters
+        const PADDLE_WIDTH = 10;
+        const PADDLE_HEIGHT = 100;
+        const BALL_SIZE = 10;
+        const GAME_SPEED = 5;
+
+        // Paddle positions
+        let player1Y = (canvas.height - PADDLE_HEIGHT) / 2;
+        let player2Y = (canvas.height - PADDLE_HEIGHT) / 2;
+
+        // Ball position and velocity
+        let ballX = canvas.width / 2;
+        let ballY = canvas.height / 2;
+        let ballSpeedX = GAME_SPEED;
+        let ballSpeedY = GAME_SPEED;
+
+        // Scores
+        let player1Score = 0;
+        let player2Score = 0;
+
+        // Keyboard input
+        let keys = {};
+        document.addEventListener('keydown', (e) => { keys[e.key] = true; });
+        document.addEventListener('keyup', (e) => { keys[e.key] = false; });
+
+        function update() {
+            // Move paddles
+            if (keys['ArrowUp'] && player2Y > 0) {
+                player2Y -= GAME_SPEED;
+            }
+            if (keys['ArrowDown'] && player2Y < canvas.height - PADDLE_HEIGHT) {
+                player2Y += GAME_SPEED;
+            }
+            // Simple AI for player 1 (left paddle)
+            if (ballY < player1Y + PADDLE_HEIGHT / 2) {
+                player1Y -= GAME_SPEED * 0.7; // Slightly slower than ball for challenge
+            } else if (ballY > player1Y + PADDLE_HEIGHT / 2) {
+                player1Y += GAME_SPEED * 0.7;
+            }
+            // Keep player1Y within bounds
+            player1Y = Math.max(0, Math.min(canvas.height - PADDLE_HEIGHT, player1Y));
+
+            // Move ball
+            ballX += ballSpeedX;
+            ballY += ballSpeedY;
+
+            // Ball collision with top/bottom walls
+            if (ballY + BALL_SIZE > canvas.height || ballY < 0) {
+                ballSpeedY *= -1;
+            }
+
+            // Ball collision with paddles
+            // Player 1 (left paddle)
+            if (ballX < PADDLE_WIDTH && ballY > player1Y && ballY < player1Y + PADDLE_HEIGHT) {
+                ballSpeedX *= -1;
+            }
+            // Player 2 (right paddle)
+            if (ballX + BALL_SIZE > canvas.width - PADDLE_WIDTH && ballY > player2Y && ballY < player2Y + PADDLE_HEIGHT) {
+                ballSpeedX *= -1;
+            }
+
+            // Ball goes out of bounds (scoring)
+            if (ballX < 0) {
+                player2Score++;
+                resetBall();
+            } else if (ballX + BALL_SIZE > canvas.width) {
+                player1Score++;
+                resetBall();
+            }
+        }
+
+        function draw() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw paddles
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, player1Y, PADDLE_WIDTH, PADDLE_HEIGHT);
+            ctx.fillRect(canvas.width - PADDLE_WIDTH, player2Y, PADDLE_WIDTH, PADDLE_HEIGHT);
+
+            // Draw ball
+            ctx.fillRect(ballX, ballY, BALL_SIZE, BALL_SIZE);
+
+            // Draw scores
+            ctx.font = '30px Arial';
+            ctx.fillText(player1Score, canvas.width / 4, 30);
+            ctx.fillText(player2Score, canvas.width * 3 / 4, 30);
+        }
+
+        function resetBall() {
+            ballX = canvas.width / 2;
+            ballY = canvas.height / 2;
+            ballSpeedX *= -1; // Serve in opposite direction
+            ballSpeedY = GAME_SPEED * (Math.random() > 0.5 ? 1 : -1); // Randomize initial Y direction
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        resetBall(); // Initial ball reset
+        gameLoop(); // Start the game loop
+    </script>
+</body>
+</html>
