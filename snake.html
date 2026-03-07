@@ -3,49 +3,83 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Snake Game — AGEDA v5.3.1 Functional Test</title>
+<title>Snake Game — AGEDA Arcade</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     display: flex; justify-content: center; align-items: center;
-    min-height: 100vh; background: #1a1a2e; font-family: 'Segoe UI', sans-serif;
+    min-height: 100vh; background: #0f172a; font-family: 'Segoe UI', sans-serif;
+    color: #f8fafc;
   }
-  .container { text-align: center; }
-  h1 { color: #e94560; margin-bottom: 10px; font-size: 2rem; }
-  #score { color: #0f3460; background: #e94560; padding: 5px 20px;
-           border-radius: 20px; display: inline-block; margin-bottom: 10px;
-           font-weight: bold; font-size: 1.2rem; }
-  canvas { border: 3px solid #e94560; border-radius: 8px;
-           background: #16213e; display: block; margin: 0 auto; }
-  #game-over { color: #e94560; font-size: 1.5rem; margin-top: 15px;
-               display: none; }
+  .container { text-align: center; background: #1e293b; padding: 2rem; border-radius: 1rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+  h1 { color: #38bdf8; margin-bottom: 1rem; font-size: 2.5rem; text-transform: uppercase; letter-spacing: 0.1em; }
+  .stats { display: flex; justify-content: space-around; margin-bottom: 1rem; }
+  .stat-box { background: #334155; padding: 0.5rem 1.5rem; border-radius: 0.5rem; border: 1px solid #475569; }
+  .stat-label { font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; }
+  .stat-value { font-size: 1.25rem; font-weight: bold; color: #38bdf8; }
+  canvas { border: 4px solid #334155; border-radius: 0.5rem; background: #020617; display: block; margin: 0 auto; box-shadow: inset 0 0 20px rgba(0,0,0,0.8); }
+  #game-over { 
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: rgba(15, 23, 42, 0.9); padding: 2rem; border-radius: 1rem; border: 2px solid #ef4444;
+    display: none; text-align: center; z-index: 10;
+  }
+  #game-over h2 { color: #ef4444; font-size: 2rem; margin-bottom: 1rem; }
+  .btn { background: #38bdf8; color: #0f172a; padding: 0.75rem 1.5rem; border-radius: 0.5rem; border: none; font-weight: bold; cursor: pointer; margin-top: 1rem; transition: all 0.2s; }
+  .btn:hover { background: #0ea5e9; transform: scale(1.05); }
+  .wrapper { position: relative; }
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>🐍 Snake</h1>
-  <div id="score">Score: 0</div>
-  <canvas id="game" width="400" height="400"></canvas>
-  <div id="game-over">Game Over! Press Space to restart</div>
+  <h1>Arcade Snake</h1>
+  <div class="stats">
+    <div class="stat-box">
+        <div class="stat-label">Score</div>
+        <div id="score" class="stat-value">0</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-label">High Score</div>
+        <div id="high-score" class="stat-value">0</div>
+    </div>
+  </div>
+  <div class="wrapper">
+      <canvas id="game" width="400" height="400"></canvas>
+      <div id="game-over">
+          <h2>GAME OVER</h2>
+          <p id="final-score">Score: 0</p>
+          <button class="btn" onclick="init()">Restart</button>
+          <p style="margin-top: 10px; font-size: 0.8rem; color: #94a3b8;">or press Space</p>
+      </div>
+  </div>
+  <p style="margin-top: 1.5rem; color: #64748b; font-size: 0.9rem;">Use Arrow Keys to Move</p>
 </div>
 <script>
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const scoreEl = document.getElementById('score');
+const highScoreEl = document.getElementById('high-score');
 const gameOverEl = document.getElementById('game-over');
+const finalScoreEl = document.getElementById('final-score');
 const GRID = 20, CELL = canvas.width / GRID;
-let snake, food, dir, score, gameLoop, running;
+
+let snake, food, dir, score, gameLoop, running, highScore = 0;
+let nextDir;
 
 function init() {
-  snake = [{x: 10, y: 10}];
+  snake = [
+      {x: 10, y: 10},
+      {x: 9, y: 10},
+      {x: 8, y: 10}
+  ];
   dir = {x: 1, y: 0};
+  nextDir = {x: 1, y: 0};
   score = 0;
   running = true;
   gameOverEl.style.display = 'none';
-  scoreEl.textContent = 'Score: 0';
+  scoreEl.textContent = '0';
   placeFood();
   if (gameLoop) clearInterval(gameLoop);
-  gameLoop = setInterval(update, 120);
+  gameLoop = setInterval(update, 100);
 }
 
 function placeFood() {
@@ -56,51 +90,119 @@ function placeFood() {
 
 function update() {
   if (!running) return;
+  
+  dir = nextDir;
   const head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
-  if (head.x < 0 || head.x >= GRID || head.y < 0 || head.y >= GRID ||
-      snake.some(s => s.x === head.x && s.y === head.y)) {
-    running = false;
-    gameOverEl.style.display = 'block';
-    clearInterval(gameLoop);
-    return;
+  
+  // Wall collision
+  if (head.x < 0 || head.x >= GRID || head.y < 0 || head.y >= GRID) {
+      endGame();
+      return;
   }
+  
+  // Self collision
+  if (snake.some(s => s.x === head.x && s.y === head.y)) {
+      endGame();
+      return;
+  }
+
   snake.unshift(head);
+  
   if (head.x === food.x && head.y === food.y) {
     score += 10;
-    scoreEl.textContent = 'Score: ' + score;
+    scoreEl.textContent = score;
+    if (score > highScore) {
+        highScore = score;
+        highScoreEl.textContent = highScore;
+    }
     placeFood();
-  } else { snake.pop(); }
+  } else { 
+    snake.pop(); 
+  }
   draw();
 }
 
+function endGame() {
+    running = false;
+    gameOverEl.style.display = 'block';
+    finalScoreEl.textContent = 'Final Score: ' + score;
+    clearInterval(gameLoop);
+}
+
 function draw() {
-  ctx.fillStyle = '#16213e';
+  // Clear canvas
+  ctx.fillStyle = '#020617';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  // Draw grid
-  ctx.strokeStyle = '#1a1a3e';
-  for (let i = 0; i < GRID; i++) {
-    ctx.beginPath(); ctx.moveTo(i*CELL,0); ctx.lineTo(i*CELL,canvas.height); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(0,i*CELL); ctx.lineTo(canvas.width,i*CELL); ctx.stroke();
+  
+  // Draw grid lines (subtle)
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= GRID; i++) {
+    ctx.beginPath(); ctx.moveTo(i*CELL, 0); ctx.lineTo(i*CELL, canvas.height); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, i*CELL); ctx.lineTo(canvas.width, i*CELL); ctx.stroke();
   }
+
   // Draw snake
   snake.forEach((s, i) => {
-    ctx.fillStyle = i === 0 ? '#e94560' : '#0f3460';
-    ctx.fillRect(s.x*CELL+1, s.y*CELL+1, CELL-2, CELL-2);
-    ctx.strokeStyle = '#e94560';
-    ctx.strokeRect(s.x*CELL+1, s.y*CELL+1, CELL-2, CELL-2);
+    // Gradient effect for snake
+    const alpha = 1 - (i / snake.length) * 0.6;
+    ctx.fillStyle = i === 0 ? '#38bdf8' : `rgba(56, 189, 248, ${alpha})`;
+    
+    // Rounded rectangles for snake parts
+    const padding = 2;
+    drawRoundedRect(
+        s.x * CELL + padding, 
+        s.y * CELL + padding, 
+        CELL - padding * 2, 
+        CELL - padding * 2, 
+        4
+    );
   });
-  // Draw food
-  ctx.fillStyle = '#00d2ff';
+
+  // Draw food (glowing pulse effect)
+  const time = Date.now() * 0.005;
+  const pulse = Math.sin(time) * 2;
+  ctx.fillStyle = '#f43f5e';
+  ctx.shadowBlur = 15;
+  ctx.shadowColor = '#f43f5e';
   ctx.beginPath();
-  ctx.arc(food.x*CELL+CELL/2, food.y*CELL+CELL/2, CELL/2-2, 0, Math.PI*2);
+  ctx.arc(food.x*CELL+CELL/2, food.y*CELL+CELL/2, (CELL/2-4) + pulse, 0, Math.PI*2);
   ctx.fill();
+  ctx.shadowBlur = 0;
+}
+
+function drawRoundedRect(x, y, width, height, radius) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+    ctx.fill();
 }
 
 document.addEventListener('keydown', e => {
-  const map = {ArrowUp:{x:0,y:-1}, ArrowDown:{x:0,y:1},
-               ArrowLeft:{x:-1,y:0}, ArrowRight:{x:1,y:0}};
-  if (map[e.key] && !(map[e.key].x === -dir.x && map[e.key].y === -dir.y))
-    dir = map[e.key];
+  const map = {
+      ArrowUp: {x:0, y:-1}, 
+      ArrowDown: {x:0, y:1},
+      ArrowLeft: {x:-1, y:0}, 
+      ArrowRight: {x:1, y:0}
+  };
+  
+  if (map[e.key]) {
+    const requestedDir = map[e.key];
+    // Prevent 180 degree turns
+    if (!(requestedDir.x === -dir.x && requestedDir.y === -dir.y)) {
+        nextDir = requestedDir;
+    }
+    e.preventDefault();
+  }
+  
   if (e.code === 'Space' && !running) init();
 });
 
