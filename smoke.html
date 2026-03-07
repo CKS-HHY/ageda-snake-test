@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arcade Smoke — Volumetric Particle Sim</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh; background: #050505; font-family: 'Courier New', monospace;
+    overflow: hidden; color: #fff;
+  }
+  .container { text-align: center; position: relative; }
+  h1 { color: #555; margin-bottom: 10px; font-size: 1.2rem; letter-spacing: 5px; text-transform: uppercase; }
+  canvas { 
+    border: 1px solid #222; 
+    background: #000; 
+    display: block; 
+    margin: 0 auto;
+    cursor: crosshair;
+    box-shadow: 0 0 20px rgba(255,255,255,0.05);
+  }
+  .ui {
+    position: absolute; bottom: -30px; width: 100%;
+    font-size: 0.7rem; color: #444; pointer-events: none;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Arcade Smoke</h1>
+  <canvas id="canvas" width="600" height="400"></canvas>
+  <div class="ui">MOVE MOUSE TO EMIT • CLICK TO EXPLODE</div>
+</div>
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+let particles = [];
+const mouse = { x: -100, y: -100 };
+
+class Particle {
+  constructor(x, y, isExplosion = false) {
+    this.x = x;
+    this.y = y;
+    const angle = isExplosion ? Math.random() * Math.PI * 2 : Math.random() * 0.5 - 0.25;
+    const speed = isExplosion ? Math.random() * 5 + 2 : Math.random() * 2 + 0.5;
+    
+    this.vx = Math.cos(isExplosion ? angle : angle - Math.PI/2) * speed;
+    this.vy = Math.sin(isExplosion ? angle : angle - Math.PI/2) * speed;
+    
+    this.life = 1.0;
+    this.decay = Math.random() * 0.02 + 0.005;
+    this.size = Math.random() * 20 + 10;
+    this.color = Math.random() > 0.5 ? '#333' : '#555';
+    this.rotation = Math.random() * Math.PI * 2;
+    this.vr = (Math.random() - 0.5) * 0.1;
+  }
+
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.vy -= 0.02; // Slight buoyancy
+    this.life -= this.decay;
+    this.size += 0.5; // Expanding smoke
+    this.rotation += this.vr;
+  }
+
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.rotation);
+    ctx.globalAlpha = this.life * 0.3;
+    ctx.fillStyle = this.color;
+    // Draw "puffy" smoke using a hex-like shape or circles
+    ctx.beginPath();
+    for(let i=0; i<6; i++) {
+        const a = i * Math.PI / 3;
+        const r = this.size * (0.8 + Math.random() * 0.2);
+        ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function spawn(x, y, count = 1, explosion = false) {
+  for(let i=0; i<count; i++) {
+    particles.push(new Particle(x, y, explosion));
+  }
+}
+
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = e.clientX - rect.left;
+  mouse.y = e.clientY - rect.top;
+  spawn(mouse.x, mouse.y, 2);
+});
+
+canvas.addEventListener('mousedown', e => {
+    spawn(mouse.x, mouse.y, 30, true);
+});
+
+function loop() {
+  ctx.fillStyle = 'black';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Auto-emit some from bottom
+  if (Math.random() > 0.8) spawn(canvas.width / 2 + (Math.random()-0.5)*20, canvas.height + 10, 1);
+
+  particles = particles.filter(p => p.life > 0);
+  particles.forEach(p => {
+    p.update();
+    p.draw();
+  });
+
+  requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+</body>
+</html>
